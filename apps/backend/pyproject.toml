@@ -1,0 +1,30 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [{ name = "LapPG", email = "lappg@inter-k.com" }]
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.118.0",
+    "prisma>=0.15.0",
+    "pydantic-settings>=2.11.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-multipart>=0.0.6",
+]
+
+[project.scripts]
+serve = "backend.cli:server_prod"
+dev = "backend.cli:server_dev"
+lint = "backend.cli:lint"
+test = "backend.cli:test"
+dbpush = "backend.cli:db_push"
+migrate = "backend.cli:migrate_db"
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["mypy>=1.18.2", "pytest>=8.4.2", "pytest-cov>=7.0.0", "ruff>=0.13.2"]
