@@ -17,13 +17,13 @@ def run_cmd(cmd, **kwargs):
 def server_dev():
     import uvicorn
 
-    uvicorn.run("backend.interfaces.rest.server:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("interfaces.rest.server:app", host="0.0.0.0", port=8000, reload=True)
 
 
 def server_prod():
     import uvicorn
 
-    from backend.interfaces.rest.server import app
+    from interfaces.rest.server import app
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
 

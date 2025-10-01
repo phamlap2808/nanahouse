@@ -2,9 +2,9 @@ from dataclasses import dataclass
 
 from fastapi import APIRouter
 
-from backend.interfaces.rest.utils import APIRoute, add_api_route
-from backend.core.controllers.auth.controller import AuthController
-from backend.core.controllers.auth.io import (
+from interfaces.rest.utils import APIRoute, add_api_route
+from core.controllers.auth.controller import AuthController
+from core.controllers.auth.io import (
     RegisterInput,
     LoginInput,
     MeUpdateInput,

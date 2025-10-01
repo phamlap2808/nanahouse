@@ -5,9 +5,9 @@ from typing import Optional
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from backend.core.config import settings
-from backend.core.db import prisma
-from backend.core.security import (
+from core.config import settings
+from core.db import prisma
+from core.security import (
     verify_password,
     get_password_hash,
     create_access_token,

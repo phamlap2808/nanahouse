@@ -4,7 +4,7 @@ from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-from backend.core.security import verify_token
+from core.security import verify_token
 
 
 class JwtAuthMiddleware(BaseHTTPMiddleware):

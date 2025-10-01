@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional
-from backend.core.controllers.commons import BaseResponse
+from core.controllers.commons import BaseResponse
 
 
 class UserCreateInput(BaseModel):

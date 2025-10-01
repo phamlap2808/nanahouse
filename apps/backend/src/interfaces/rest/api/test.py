@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from fastapi import APIRouter
-from backend.interfaces.rest.utils import APIRoute, add_api_route
+from interfaces.rest.utils import APIRoute, add_api_route
 
 @dataclass(kw_only=True)
 class TestRouter:

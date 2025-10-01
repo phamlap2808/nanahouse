@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
-from backend.core.controllers.commons import BaseResponse
+from core.controllers.commons import BaseResponse
 
 
 class RegisterInput(BaseModel):

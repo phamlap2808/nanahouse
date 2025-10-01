@@ -3,12 +3,12 @@ from typing import Optional
 
 from fastapi import APIRouter
 
-from backend.interfaces.rest.utils import APIRoute, add_api_route
-from backend.core.controllers.user import (
+from interfaces.rest.utils import APIRoute, add_api_route
+from core.controllers.user import (
     UserController,
     UserCreateInput,
 )
-from backend.core.controllers.user.io import UserResponse, UsersResponse
+from core.controllers.user.io import UserResponse, UsersResponse
 
 
 @dataclass(kw_only=True)

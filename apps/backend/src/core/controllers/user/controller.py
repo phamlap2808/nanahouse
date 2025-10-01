@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from fastapi import HTTPException
 
-from backend.core.db import prisma
+from core.db import prisma
 from .io import UserOutput, UserResponse, UsersResponse
 
 

@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from backend.core.db import connect_db, disconnect_db
+from core.db import connect_db, disconnect_db
 from .api.test import TestRouter
 from .api.users import UsersRouter
 from .api.auth import AuthRouter
 from .middleware.gauth import JwtAuthMiddleware
-from backend.core.config import settings
+from core.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
