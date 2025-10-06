@@ -2,27 +2,16 @@ from dataclasses import dataclass
 from typing import Optional, List
 
 from fastapi import HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
 
 from core.db import prisma
-from core.security import verify_token
+from core.auth_utils import verify_auth
 from .io import PermissionOutput, PermissionResponse, PermissionsResponse, PermissionCreateInput, PermissionUpdateInput
-
-security = HTTPBearer()
 
 
 @dataclass(kw_only=True)
 class PermissionController:
-    async def _verify_auth(self, credentials: HTTPAuthorizationCredentials) -> str:
-        """Verify authentication token and return user email"""
-        email = verify_token(credentials.credentials)
-        if not email:
-            raise HTTPException(status_code=401, detail="Could not validate credentials")
-        return email
-
-    async def create(self, name: str, resource: str, action: str, description: Optional[str] = None, credentials: HTTPAuthorizationCredentials = Depends(security)) -> PermissionResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def create(self, name: str, resource: str, action: str, description: Optional[str] = None, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> PermissionResponse:
         existing = await prisma.permission.find_first(where={"resource": resource, "action": action})
         if existing:
             raise HTTPException(status_code=409, detail="Permission with this resource and action already exists")
@@ -35,9 +24,7 @@ class PermissionController:
         })
         return PermissionResponse(data=PermissionOutput.model_validate(permission.model_dump()))
 
-    async def get(self, permission_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> PermissionResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def get(self, permission_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> PermissionResponse:
         permission = await prisma.permission.find_unique(
             where={"id": permission_id},
             include={
@@ -52,9 +39,7 @@ class PermissionController:
             raise HTTPException(status_code=404, detail="Permission not found")
         return PermissionResponse(data=PermissionOutput.model_validate(permission.model_dump()))
 
-    async def get_by_resource_action(self, resource: str, action: str, credentials: HTTPAuthorizationCredentials = Depends(security)) -> PermissionResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def get_by_resource_action(self, resource: str, action: str, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> PermissionResponse:
         permission = await prisma.permission.find_first(
             where={"resource": resource, "action": action},
             include={
@@ -69,9 +54,7 @@ class PermissionController:
             raise HTTPException(status_code=404, detail="Permission not found")
         return PermissionResponse(data=PermissionOutput.model_validate(permission.model_dump()))
 
-    async def list(self, credentials: HTTPAuthorizationCredentials = Depends(security)) -> PermissionsResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def list(self, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> PermissionsResponse:
         permissions = await prisma.permission.find_many(
             include={
                 "rolePermissions": {
@@ -83,9 +66,7 @@ class PermissionController:
         )
         return PermissionsResponse(data=[PermissionOutput.model_validate(p.model_dump()) for p in permissions])
 
-    async def list_by_resource(self, resource: str, credentials: HTTPAuthorizationCredentials = Depends(security)) -> PermissionsResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def list_by_resource(self, resource: str, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> PermissionsResponse:
         permissions = await prisma.permission.find_many(
             where={"resource": resource},
             include={
@@ -99,9 +80,7 @@ class PermissionController:
         return PermissionsResponse(data=[PermissionOutput.model_validate(p.model_dump()) for p in permissions])
 
     async def update(self, permission_id: int, name: Optional[str] = None, resource: Optional[str] = None, 
-                    action: Optional[str] = None, description: Optional[str] = None, credentials: HTTPAuthorizationCredentials = Depends(security)) -> PermissionResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+                    action: Optional[str] = None, description: Optional[str] = None, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> PermissionResponse:
         permission = await prisma.permission.find_unique(where={"id": permission_id})
         if not permission:
             raise HTTPException(status_code=404, detail="Permission not found")
@@ -132,9 +111,7 @@ class PermissionController:
         )
         return PermissionResponse(data=PermissionOutput.model_validate(updated_permission.model_dump()))
 
-    async def delete(self, permission_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> PermissionResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def delete(self, permission_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> PermissionResponse:
         permission = await prisma.permission.find_unique(where={"id": permission_id})
         if not permission:
             raise HTTPException(status_code=404, detail="Permission not found")

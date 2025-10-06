@@ -2,26 +2,16 @@ from dataclasses import dataclass
 from typing import Optional, List
 
 from fastapi import HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
 
 from core.db import prisma
-from core.security import verify_token
+from core.auth_utils import verify_auth
 from .io import UserOutput, UserResponse, UsersResponse, UserPermissionsResponse
-
-security = HTTPBearer()
 
 
 @dataclass(kw_only=True)
 class UserController:
-    async def _verify_auth(self, credentials: HTTPAuthorizationCredentials) -> str:
-        """Verify authentication token and return user email"""
-        email = verify_token(credentials.credentials)
-        if not email:
-            raise HTTPException(status_code=401, detail="Could not validate credentials")
-        return email
-    async def create(self, email: str, password: str, name: Optional[str] = None, group_id: Optional[int] = None, is_admin: bool = False, credentials: HTTPAuthorizationCredentials = Depends(security)) -> UserResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def create(self, email: str, password: str, name: Optional[str] = None, group_id: Optional[int] = None, is_admin: bool = False, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> UserResponse:
         
         existing = await prisma.user.find_unique(where={"email": email})
         if existing:
@@ -42,9 +32,7 @@ class UserController:
         })
         return UserResponse(data=UserOutput.model_validate(user.model_dump()))
 
-    async def get(self, user_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> UserResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def get(self, user_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> UserResponse:
         
         user = await prisma.user.find_unique(
             where={"id": user_id},
@@ -72,9 +60,7 @@ class UserController:
             raise HTTPException(status_code=404, detail="user not found")
         return UserResponse(data=UserOutput.model_validate(user.model_dump()))
 
-    async def list(self, credentials: HTTPAuthorizationCredentials = Depends(security)) -> UsersResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def list(self, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> UsersResponse:
         
         users = await prisma.user.find_many(
             include={
@@ -91,9 +77,7 @@ class UserController:
         )
         return UsersResponse(data=[UserOutput.model_validate(u.model_dump()) for u in users])
 
-    async def update(self, user_id: int, name: Optional[str] = None, group_id: Optional[int] = None, is_admin: Optional[bool] = None, credentials: HTTPAuthorizationCredentials = Depends(security)) -> UserResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def update(self, user_id: int, name: Optional[str] = None, group_id: Optional[int] = None, is_admin: Optional[bool] = None, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> UserResponse:
         
         user = await prisma.user.find_unique(where={"id": user_id})
         if not user:
@@ -118,9 +102,7 @@ class UserController:
         )
         return UserResponse(data=UserOutput.model_validate(updated_user.model_dump()))
 
-    async def delete(self, user_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> UserResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def delete(self, user_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> UserResponse:
         
         user = await prisma.user.find_unique(where={"id": user_id})
         if not user:

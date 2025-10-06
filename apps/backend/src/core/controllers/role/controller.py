@@ -2,27 +2,16 @@ from dataclasses import dataclass
 from typing import Optional, List
 
 from fastapi import HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
 
 from core.db import prisma
-from core.security import verify_token
+from core.auth_utils import verify_auth
 from .io import RoleOutput, RoleResponse, RolesResponse, RoleCreateInput, RoleUpdateInput
-
-security = HTTPBearer()
 
 
 @dataclass(kw_only=True)
 class RoleController:
-    async def _verify_auth(self, credentials: HTTPAuthorizationCredentials) -> str:
-        """Verify authentication token and return user email"""
-        email = verify_token(credentials.credentials)
-        if not email:
-            raise HTTPException(status_code=401, detail="Could not validate credentials")
-        return email
-
-    async def create(self, name: str, description: Optional[str] = None, credentials: HTTPAuthorizationCredentials = Depends(security)) -> RoleResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def create(self, name: str, description: Optional[str] = None, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> RoleResponse:
         existing = await prisma.role.find_unique(where={"name": name})
         if existing:
             raise HTTPException(status_code=409, detail="Role name already exists")
@@ -33,9 +22,7 @@ class RoleController:
         })
         return RoleResponse(data=RoleOutput.model_validate(role.model_dump()))
 
-    async def get(self, role_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> RoleResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def get(self, role_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> RoleResponse:
         role = await prisma.role.find_unique(
             where={"id": role_id},
             include={
@@ -55,9 +42,7 @@ class RoleController:
             raise HTTPException(status_code=404, detail="Role not found")
         return RoleResponse(data=RoleOutput.model_validate(role.model_dump()))
 
-    async def list(self, credentials: HTTPAuthorizationCredentials = Depends(security)) -> RolesResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def list(self, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> RolesResponse:
         roles = await prisma.role.find_many(
             include={
                 "rolePermissions": {
@@ -74,9 +59,7 @@ class RoleController:
         )
         return RolesResponse(data=[RoleOutput.model_validate(r.model_dump()) for r in roles])
 
-    async def update(self, role_id: int, name: Optional[str] = None, description: Optional[str] = None, credentials: HTTPAuthorizationCredentials = Depends(security)) -> RoleResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def update(self, role_id: int, name: Optional[str] = None, description: Optional[str] = None, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> RoleResponse:
         role = await prisma.role.find_unique(where={"id": role_id})
         if not role:
             raise HTTPException(status_code=404, detail="Role not found")
@@ -97,9 +80,7 @@ class RoleController:
         )
         return RoleResponse(data=RoleOutput.model_validate(updated_role.model_dump()))
 
-    async def delete(self, role_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> RoleResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def delete(self, role_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> RoleResponse:
         role = await prisma.role.find_unique(where={"id": role_id})
         if not role:
             raise HTTPException(status_code=404, detail="Role not found")
@@ -107,9 +88,7 @@ class RoleController:
         deleted_role = await prisma.role.delete(where={"id": role_id})
         return RoleResponse(data=RoleOutput.model_validate(deleted_role.model_dump()))
 
-    async def assign_permission(self, role_id: int, permission_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> RoleResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def assign_permission(self, role_id: int, permission_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> RoleResponse:
         # Kiểm tra role tồn tại
         role = await prisma.role.find_unique(where={"id": role_id})
         if not role:
@@ -146,9 +125,7 @@ class RoleController:
         )
         return RoleResponse(data=RoleOutput.model_validate(updated_role.model_dump()))
 
-    async def remove_permission(self, role_id: int, permission_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> RoleResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def remove_permission(self, role_id: int, permission_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> RoleResponse:
         # Kiểm tra role tồn tại
         role = await prisma.role.find_unique(where={"id": role_id})
         if not role:

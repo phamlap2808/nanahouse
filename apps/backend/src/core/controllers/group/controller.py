@@ -2,27 +2,16 @@ from dataclasses import dataclass
 from typing import Optional, List
 
 from fastapi import HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
 
 from core.db import prisma
-from core.security import verify_token
+from core.auth_utils import verify_auth
 from .io import GroupOutput, GroupResponse, GroupsResponse, GroupCreateInput, GroupUpdateInput
-
-security = HTTPBearer()
 
 
 @dataclass(kw_only=True)
 class GroupController:
-    async def _verify_auth(self, credentials: HTTPAuthorizationCredentials) -> str:
-        """Verify authentication token and return user email"""
-        email = verify_token(credentials.credentials)
-        if not email:
-            raise HTTPException(status_code=401, detail="Could not validate credentials")
-        return email
-
-    async def create(self, name: str, description: Optional[str] = None, is_admin: bool = False, credentials: HTTPAuthorizationCredentials = Depends(security)) -> GroupResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def create(self, name: str, description: Optional[str] = None, is_admin: bool = False, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> GroupResponse:
         existing = await prisma.group.find_unique(where={"name": name})
         if existing:
             raise HTTPException(status_code=409, detail="Group name already exists")
@@ -34,9 +23,7 @@ class GroupController:
         })
         return GroupResponse(data=GroupOutput.model_validate(group.model_dump()))
 
-    async def get(self, group_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> GroupResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def get(self, group_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> GroupResponse:
         group = await prisma.group.find_unique(
             where={"id": group_id},
             include={
@@ -60,9 +47,7 @@ class GroupController:
             raise HTTPException(status_code=404, detail="Group not found")
         return GroupResponse(data=GroupOutput.model_validate(group.model_dump()))
 
-    async def list(self, credentials: HTTPAuthorizationCredentials = Depends(security)) -> GroupsResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def list(self, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> GroupsResponse:
         groups = await prisma.group.find_many(
             include={
                 "users": True,
@@ -75,9 +60,7 @@ class GroupController:
         )
         return GroupsResponse(data=[GroupOutput.model_validate(g.model_dump()) for g in groups])
 
-    async def update(self, group_id: int, name: Optional[str] = None, description: Optional[str] = None, is_admin: Optional[bool] = None, credentials: HTTPAuthorizationCredentials = Depends(security)) -> GroupResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def update(self, group_id: int, name: Optional[str] = None, description: Optional[str] = None, is_admin: Optional[bool] = None, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> GroupResponse:
         group = await prisma.group.find_unique(where={"id": group_id})
         if not group:
             raise HTTPException(status_code=404, detail="Group not found")
@@ -100,9 +83,7 @@ class GroupController:
         )
         return GroupResponse(data=GroupOutput.model_validate(updated_group.model_dump()))
 
-    async def delete(self, group_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> GroupResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def delete(self, group_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> GroupResponse:
         group = await prisma.group.find_unique(where={"id": group_id})
         if not group:
             raise HTTPException(status_code=404, detail="Group not found")
@@ -110,9 +91,7 @@ class GroupController:
         deleted_group = await prisma.group.delete(where={"id": group_id})
         return GroupResponse(data=GroupOutput.model_validate(deleted_group.model_dump()))
 
-    async def add_user(self, group_id: int, user_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> GroupResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def add_user(self, group_id: int, user_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> GroupResponse:
         # Kiểm tra group tồn tại
         group = await prisma.group.find_unique(where={"id": group_id})
         if not group:
@@ -136,9 +115,7 @@ class GroupController:
         )
         return GroupResponse(data=GroupOutput.model_validate(updated_group.model_dump()))
 
-    async def remove_user(self, group_id: int, user_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> GroupResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def remove_user(self, group_id: int, user_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> GroupResponse:
         # Kiểm tra group tồn tại
         group = await prisma.group.find_unique(where={"id": group_id})
         if not group:
@@ -162,9 +139,7 @@ class GroupController:
         )
         return GroupResponse(data=GroupOutput.model_validate(updated_group.model_dump()))
 
-    async def assign_role(self, group_id: int, role_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> GroupResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def assign_role(self, group_id: int, role_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> GroupResponse:
         # Kiểm tra group tồn tại
         group = await prisma.group.find_unique(where={"id": group_id})
         if not group:
@@ -201,9 +176,7 @@ class GroupController:
         )
         return GroupResponse(data=GroupOutput.model_validate(updated_group.model_dump()))
 
-    async def remove_role(self, group_id: int, role_id: int, credentials: HTTPAuthorizationCredentials = Depends(security)) -> GroupResponse:
-        # Verify authentication
-        await self._verify_auth(credentials)
+    async def remove_role(self, group_id: int, role_id: int, credentials: HTTPAuthorizationCredentials = Depends(verify_auth)) -> GroupResponse:
         # Kiểm tra group tồn tại
         group = await prisma.group.find_unique(where={"id": group_id})
         if not group:
