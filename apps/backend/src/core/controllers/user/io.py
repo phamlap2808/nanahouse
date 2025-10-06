@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, field_validator
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from core.controllers.commons import BaseResponse
 
 
@@ -7,6 +7,8 @@ class UserCreateInput(BaseModel):
     email: EmailStr
     password: str
     name: Optional[str] = None
+    group_id: Optional[int] = None
+    is_admin: bool = False
 
     @field_validator("password")
     def validate_password(cls, v: str):
@@ -25,19 +27,39 @@ class UserCreateInput(BaseModel):
         return v
 
 
+class UserUpdateInput(BaseModel):
+    name: Optional[str] = None
+    group_id: Optional[int] = None
+    is_admin: Optional[bool] = None
+
+
 class UserOutput(BaseModel):
     id: int
     email: EmailStr
     name: Optional[str] = None
     status: str
-    role: str
+    created_at: str
+    updated_at: str
+    group_id: Optional[int] = None
+    is_admin: bool
+    group: Optional[Dict[str, Any]] = None
+
+
+class UserPermissionOutput(BaseModel):
+    resource: str
+    action: str
+    name: str
 
 
 class UserResponse(BaseResponse[UserOutput]):
     pass
 
 
-class UsersResponse(BaseResponse[list[UserOutput]]):
+class UsersResponse(BaseResponse[List[UserOutput]]):
+    pass
+
+
+class UserPermissionsResponse(BaseResponse[List[UserPermissionOutput]]):
     pass
 
 

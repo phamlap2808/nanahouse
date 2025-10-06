@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
+import hashlib
+import secrets
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -7,8 +9,8 @@ from passlib.context import CryptContext
 from core.config import settings
 
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Password hashing - sử dụng pbkdf2_sha256 thay vì bcrypt để tránh version issues
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

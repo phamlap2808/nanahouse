@@ -19,9 +19,75 @@ model User {
   name      String?
   password  String
   status    String   @default("inactive")
-  role      String   @default("user")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // RBAC relationships
+  groupId   Int?
+  group     Group?   @relation(fields: [groupId], references: [id])
+  isAdmin   Boolean  @default(false)
+}
+
+model Group {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  isAdmin     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  users       User[]
+  groupRoles  GroupRole[]
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  groupRoles     GroupRole[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  resource    String   // Ví dụ: "users", "products", "orders"
+  action      String   // Ví dụ: "create", "read", "update", "delete"
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  rolePermissions RolePermission[]
+}
+
+// Junction table for Group-Role many-to-many relationship
+model GroupRole {
+  id      Int @id @default(autoincrement())
+  groupId Int
+  roleId  Int
+  
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  role    Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  
+  @@unique([groupId, roleId])
+}
+
+// Junction table for Role-Permission many-to-many relationship
+model RolePermission {
+  id           Int @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+  
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  @@unique([roleId, permissionId])
 }
 
 

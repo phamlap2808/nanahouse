@@ -34,14 +34,19 @@ class AuthController:
         if existing_user:
             raise HTTPException(status_code=409, detail="email already exists")
 
-        hashed_password = get_password_hash(password)
+        try:
+            hashed_password = get_password_hash(password)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=422, detail="Invalid password format")
+
         new_user = await prisma.user.create(
             data={
                 "email": email,
                 "name": name,
                 "password": hashed_password,
                 "status": "inactive",
-                "role": "user",
             }
         )
         return UserResponse(data=UserOutput.model_validate(new_user.model_dump()))
