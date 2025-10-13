@@ -10,6 +10,9 @@ from core.controllers.auth.io import (
     MeUpdateInput,
     UserResponse,
     TokenResponse,
+    ForgotPasswordInput,
+    ResetPasswordInput,
+    VerifyEmailInput,
 )
 
 
@@ -25,6 +28,9 @@ class AuthRouter:
                 APIRoute(path="/login", methods=["POST"], handler=controller.login_with_body, response_model=TokenResponse),
                 APIRoute(path="/me", methods=["GET"], handler=controller.me, response_model=UserResponse),
                 APIRoute(path="/me", methods=["PUT"], handler=controller.update_me, response_model=UserResponse),
+                APIRoute(path="/forgot-password", methods=["POST"], handler=controller.forgot_password),
+                APIRoute(path="/reset-password", methods=["POST"], handler=controller.reset_password),
+                APIRoute(path="/verify-email", methods=["POST"], handler=controller.verify_email),
             ],
         )
 

@@ -21,7 +21,13 @@ from .io import (
     UserResponse,
     UserOutput,
     MeUpdateInput,
+    ForgotPasswordInput,
+    ResetPasswordInput,
+    VerifyEmailInput,
 )
+from core.services.notify import send_email
+import secrets
+from datetime import datetime, timezone, timedelta
 
 
 security = HTTPBearer()
@@ -49,6 +55,26 @@ class AuthController:
                 "status": "inactive",
             }
         )
+        # Create verification token and send email
+        import secrets
+        from datetime import datetime, timezone, timedelta
+        token = secrets.token_urlsafe(32)
+        expires = datetime.now(timezone.utc) + timedelta(hours=24)
+        await prisma.emailverificationtoken.create(data={
+            "userId": new_user.id,
+            "token": token,
+            "expiresAt": expires
+        })
+
+        from core.config import settings
+        from core.services.notify import send_email
+        verify_url = f"{settings.site_base_url}/verify-email?token={token}"
+        send_email(
+            to_email=new_user.email,
+            subject="Xác thực tài khoản",
+            html_body=f"<p>Chào {new_user.name or new_user.email},</p><p>Vui lòng xác thực tài khoản bằng cách nhấp: <a href=\"{verify_url}\">Xác thực</a></p>"
+        )
+
         return UserResponse(data=UserOutput.model_validate(new_user.model_dump()))
 
     async def login(self, email: str, password: str) -> TokenResponse:
@@ -94,4 +120,45 @@ class AuthController:
     async def login_with_body(self, body: LoginInput) -> TokenResponse:
         return await self.login(email=body.email, password=body.password)
 
+    async def forgot_password(self, body: ForgotPasswordInput) -> dict:
+        user = await prisma.user.find_unique(where={"email": body.email})
+        if not user:
+            # Không lộ thông tin user tồn tại hay không
+            return {"message": "If the email exists, a reset link has been sent"}
+
+        token = secrets.token_urlsafe(32)
+        expires = datetime.now(timezone.utc) + timedelta(hours=2)
+        await prisma.passwordresettoken.create(data={
+            "userId": user.id,
+            "token": token,
+            "expiresAt": expires
+        })
+
+        reset_url = f"{settings.site_base_url}/reset-password?token={token}"
+        send_email(
+            to_email=body.email,
+            subject="Reset your password",
+            html_body=f"<p>Click the link to reset your password:</p><p><a href=\"{reset_url}\">Reset Password</a></p>"
+        )
+        return {"message": "If the email exists, a reset link has been sent"}
+
+    async def reset_password(self, body: ResetPasswordInput) -> dict:
+        prt = await prisma.passwordresettoken.find_unique(where={"token": body.token}, include={"user": True})
+        if not prt or prt.usedAt is not None or (prt.expiresAt and prt.expiresAt < datetime.now(timezone.utc)):
+            raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+        hashed = get_password_hash(body.new_password)
+        await prisma.user.update(where={"id": prt.userId}, data={"password": hashed})
+        await prisma.passwordresettoken.update(where={"id": prt.id}, data={"usedAt": datetime.now(timezone.utc)})
+        return {"message": "Password has been reset"}
+
+    async def verify_email(self, body: VerifyEmailInput) -> dict:
+        from datetime import datetime, timezone
+        tok = await prisma.emailverificationtoken.find_unique(where={"token": body.token}, include={"user": True})
+        if not tok or tok.usedAt is not None or (tok.expiresAt and tok.expiresAt < datetime.now(timezone.utc)):
+            raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+        await prisma.user.update(where={"id": tok.userId}, data={"status": "active"})
+        await prisma.emailverificationtoken.update(where={"id": tok.id}, data={"usedAt": datetime.now(timezone.utc)})
+        return {"message": "Email verified"}
 

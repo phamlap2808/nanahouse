@@ -50,3 +50,17 @@ class TokenResponse(BaseResponse[TokenOutput]):
     pass
 
 
+# Password reset IO
+class ForgotPasswordInput(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordInput(BaseModel):
+    token: str = Field(..., min_length=16)
+    new_password: str = Field(..., min_length=8, max_length=72)
+
+
+# Email verification IO
+class VerifyEmailInput(BaseModel):
+    token: str = Field(..., min_length=16)
+

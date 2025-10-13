@@ -26,6 +26,23 @@ model User {
   groupId   Int?
   group     Group?   @relation(fields: [groupId], references: [id])
   isAdmin   Boolean  @default(false)
+  
+  // Blog relationships
+  posts     Post[]
+  
+  // E-commerce relationships
+  cart      Cart?
+  orders    Order[]
+
+  // Expense relationships
+  expenseCategories ExpenseCategory[]
+  expenses          Expense[]
+  
+  // Discounts
+  discountUsages    DiscountUsage[]
+  comments          Comment[]
+  passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 }
 
 model Group {
@@ -88,6 +105,635 @@ model RolePermission {
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   
   @@unique([roleId, permissionId])
+}
+
+// Category tree structure
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  description String?
+  image       String?  // URL to category image
+  order       Int      @default(0) // For custom ordering
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Tree structure
+  parentId    Int?
+  parent      Category? @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Category[] @relation("CategoryTree")
+  
+  // Products relationship
+  products    Product[]
+  
+  // Blog relationship
+  posts       Post[]
+  
+  // Attributes
+  attributes  CategoryAttribute[]
+  
+  // Index for better performance
+  @@index([parentId])
+  @@index([slug])
+  @@index([isActive])
+}
+
+// Product model
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  description String?
+  shortDescription String?
+  sku         String?  @unique // Stock Keeping Unit
+  price       Float    @default(0)
+  comparePrice Float?  // Giá so sánh (giá gốc)
+  cost        Float?   // Giá nhập
+  weight      Float?   // Trọng lượng (kg)
+  dimensions  String?  // Kích thước (VD: "10x20x30 cm")
+  stock       Int      @default(0)
+  trackStock  Boolean  @default(true)
+  allowBackorder Boolean @default(false)
+  status      String   @default("draft") // draft, active, inactive, archived
+  featured    Boolean  @default(false)
+  tags        String?  // JSON array of tags
+  seoTitle    String?
+  seoDescription String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Category relationship
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  
+  // Tags relationship (many-to-many)
+  productTags  ProductTag[]
+  
+  // E-commerce relationships
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+
+  // Variant/Options/Media
+  options      ProductOption[]
+  variants     ProductVariant[]
+  media        ProductMedia[]
+  collectionProducts CollectionProduct[]
+  attributeValues    ProductAttributeValue[]
+  discountProducts   DiscountProduct[]
+  
+  // Indexes for better performance
+  @@index([categoryId])
+  @@index([slug])
+  @@index([status])
+  @@index([featured])
+  @@index([price])
+  @@index([stock])
+}
+
+// Product options and variants
+model ProductOption {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  position  Int      @default(0)
+
+  values    ProductOptionValue[]
+  variantOptionValues ProductVariantOptionValue[]
+
+  @@index([productId])
+}
+
+model ProductOptionValue {
+  id        Int      @id @default(autoincrement())
+  optionId  Int
+  option    ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  value     String
+  position  Int      @default(0)
+
+  variantOptionValues ProductVariantOptionValue[]
+
+  @@index([optionId])
+}
+
+model ProductVariant {
+  id            Int      @id @default(autoincrement())
+  productId     Int
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku           String?  @unique
+  price         Float
+  comparePrice  Float?
+  stock         Int      @default(0)
+  trackStock    Boolean  @default(true)
+  allowBackorder Boolean @default(false)
+  weight        Float?
+  dimensions    String?
+  status        String   @default("active")
+  barcode       String?
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  optionValues  ProductVariantOptionValue[]
+
+  @@index([productId])
+}
+
+model ProductVariantOptionValue {
+  id             Int      @id @default(autoincrement())
+  variantId      Int
+  optionId       Int
+  optionValueId  Int
+
+  variant        ProductVariant     @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  option         ProductOption      @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  optionValue    ProductOptionValue @relation(fields: [optionValueId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, optionId])
+  @@index([optionValueId])
+}
+
+model ProductMedia {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  type      String   @default("image") // image, video, model3d
+  alt       String?
+  position  Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+}
+
+// Collections
+model Collection {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  description String?
+  image       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products    CollectionProduct[]
+  discountCollections DiscountCollection[]
+}
+
+model CollectionProduct {
+  id           Int       @id @default(autoincrement())
+  collectionId Int
+  productId    Int
+  position     Int       @default(0)
+
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, productId])
+  @@index([productId])
+}
+
+// Attributes
+model CategoryAttribute {
+  id          Int      @id @default(autoincrement())
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String
+  type        String   @default("text") // text, number, boolean, select, multiselect
+  options     String?  // JSON options for select types
+  position    Int      @default(0)
+
+  productValues ProductAttributeValue[]
+
+  @@index([categoryId])
+}
+
+model ProductAttributeValue {
+  id           Int      @id @default(autoincrement())
+  productId    Int
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeId  Int
+  attribute    CategoryAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  value        String
+
+  @@unique([productId, attributeId])
+  @@index([attributeId])
+}
+
+// Blog models
+model Post {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  content     String   // HTML content
+  excerpt     String?  // Short description
+  featuredImage String? // URL to featured image
+  status      String   @default("draft") // draft, published, archived
+  publishedAt DateTime?
+  canonicalUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Author relationship
+  authorId    Int
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  // Category relationship (optional)
+  categoryId  Int?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  
+  // Tags relationship (many-to-many)
+  postTags    PostTag[]
+  
+  // SEO fields
+  seoTitle    String?
+  seoDescription String?
+  seoKeywords String?
+  
+  // Stats
+  viewCount   Int      @default(0)
+  likeCount   Int      @default(0)
+  
+  // Indexes for better performance
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([viewCount])
+  comments    Comment[]
+  slugHistories PostSlugHistory[]
+}
+
+model Tag {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  color       String?  // Hex color code
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Posts relationship (many-to-many)
+  postTags    PostTag[]
+  
+  // Products relationship (many-to-many)
+  productTags  ProductTag[]
+  
+  @@index([slug])
+}
+
+// Junction table for Post-Tag many-to-many relationship
+model PostTag {
+  id      Int @id @default(autoincrement())
+  postId  Int
+  tagId   Int
+  
+  post    Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag     Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, tagId])
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  postId     Int
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId     Int?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  parentId   Int?
+  parent     Comment? @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  children   Comment[] @relation("CommentThread")
+  content    String
+  status     String   @default("visible") // visible, hidden, pending
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([postId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+// Store old slugs for redirects
+model PostSlugHistory {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  oldSlug   String
+  changedAt DateTime @default(now())
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([oldSlug])
+}
+
+// CMS Pages
+model Page {
+  id              Int      @id @default(autoincrement())
+  title           String
+  slug            String   @unique
+  content         String?
+  status          String   @default("draft") // draft, published, archived
+  publishedAt     DateTime?
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  blocks          PageBlock[]
+}
+
+model PageBlock {
+  id        Int      @id @default(autoincrement())
+  pageId    Int
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  type      String   // hero, features, grid, richtext, faq, etc.
+  data      String?  // JSON string
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageId])
+}
+
+// Junction table for Product-Tag many-to-many relationship
+model ProductTag {
+  id        Int @id @default(autoincrement())
+  productId Int
+  tagId     Int
+  
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([productId, tagId])
+}
+
+// Cart and Order models
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  appliedDiscountCodeId Int?
+  appliedDiscountCode   DiscountCode? @relation(fields: [appliedDiscountCodeId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  guestToken String? @unique
+  
+  @@unique([userId])
+}
+
+model CartItem {
+  id        Int     @id @default(autoincrement())
+  cartId    Int
+  productId Int
+  quantity  Int     @default(1)
+  
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([cartId, productId])
+}
+
+model Order {
+  id          Int      @id @default(autoincrement())
+  orderNumber String   @unique
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       OrderItem[]
+  payments    Payment[]
+  discountUsages DiscountUsage[]
+  
+  // Order details
+  status      String   @default("pending") // pending, confirmed, processing, shipped, delivered, cancelled
+  subtotal    Float
+  tax         Float    @default(0)
+  shipping    Float    @default(0)
+  discount    Float    @default(0)
+  total       Float
+  
+  // Shipping info
+  shippingName    String?
+  shippingPhone   String?
+  shippingAddress String?
+  shippingCity    String?
+  shippingState   String?
+  shippingZip     String?
+  shippingCountry String?
+  
+  // Notes
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([orderNumber])
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int
+  price     Float   // Price at time of order
+  name      String  // Product name at time of order
+  sku       String? // Product SKU at time of order
+  
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  
+  @@index([orderId])
+}
+
+model Payment {
+  id            Int      @id @default(autoincrement())
+  orderId       Int
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  // Payment details
+  amount        Float
+  currency      String   @default("VND")
+  method        String   // cash, bank_transfer, credit_card, e_wallet
+  status        String   @default("pending") // pending, completed, failed, refunded
+  transactionId String?  // External payment gateway transaction ID
+  
+  // Payment gateway info
+  gateway       String?  // vnpay, momo, zalopay, etc.
+  gatewayData   String?  // JSON data from payment gateway
+  
+  // Timestamps
+  paidAt        DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([orderId])
+  @@index([status])
+  @@index([transactionId])
+}
+
+// Password reset tokens
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Email verification tokens
+model EmailVerificationToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Expense management
+model ExpenseCategory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expenses  Expense[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+// Discounts
+model Discount {
+  id              Int       @id @default(autoincrement())
+  name            String
+  type            String    // percentage, fixed_amount, free_shipping, bogo
+  value           Float?
+  isActive        Boolean   @default(true)
+  startsAt        DateTime?
+  endsAt          DateTime?
+  totalUsageLimit Int?
+  usesPerCustomer Int?      @default(1)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  codes       DiscountCode[]
+  conditions  DiscountCondition[]
+  products    DiscountProduct[]
+  collections DiscountCollection[]
+  usages      DiscountUsage[]
+}
+
+model DiscountCode {
+  id         Int      @id @default(autoincrement())
+  discountId Int
+  code       String   @unique
+  usageLimit Int?
+  usedCount  Int      @default(0)
+  startsAt   DateTime?
+  endsAt     DateTime?
+  isActive   Boolean  @default(true)
+
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  appliedCarts Cart[]
+
+  @@index([discountId])
+}
+
+model DiscountCondition {
+  id           Int      @id @default(autoincrement())
+  discountId   Int
+  minSubtotal  Float?
+  minItems     Int?
+  appliesOnce  Boolean? @default(false)
+  // BOGO specifics
+  bogoBuyQty   Int?
+  bogoGetQty   Int?
+  bogoGetPercent Float?
+  // Free shipping flag (alternative to type)
+  freeShipping Boolean? @default(false)
+
+  discount     Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+
+  @@index([discountId])
+}
+
+model DiscountProduct {
+  id         Int     @id @default(autoincrement())
+  discountId Int
+  productId  Int
+
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([discountId, productId])
+  @@index([productId])
+}
+
+model DiscountCollection {
+  id           Int        @id @default(autoincrement())
+  discountId   Int
+  collectionId Int
+
+  discount     Discount   @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@unique([discountId, collectionId])
+  @@index([collectionId])
+}
+
+model DiscountUsage {
+  id         Int      @id @default(autoincrement())
+  discountId Int
+  userId     Int?
+  orderId    Int?
+  usedAt     DateTime @default(now())
+
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  order      Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([discountId])
+  @@index([userId])
+  @@index([orderId])
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  Int?
+  category    ExpenseCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  amount      Float
+  currency    String   @default("VND")
+  description String?
+  occurredAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([occurredAt])
 }
 
 
