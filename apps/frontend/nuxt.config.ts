@@ -2,28 +2,40 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  ssr: false,
 
   modules: [
-    '@nuxt/ui',
     '@nuxt/icon',
     '@nuxt/image',
-    '@nuxt/content',
     '@nuxt/eslint',
     '@pinia/nuxt',
-    '@logto/nuxt',
     '@nuxtjs/robots',
     '@nuxtjs/sitemap',
   ],
+
+  css: ['~/assets/css/glassmorphism.css'],
+
+  app: {
+    head: {
+      script: [
+        {
+          // Inline blocking script to prevent theme flash (FOUC)
+          innerHTML: `(function(){try{var t=localStorage.getItem('nanahouse_theme');if(!t){t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
+          type: 'text/javascript',
+        },
+      ],
+    },
+  },
 
   typescript: {
     strict: true,
     typeCheck: false, // TODO: Enable when vite-plugin-checker is compatible with current Node.js
   },
 
-  // Logto Auth Configuration
-  logto: {
-    appId: '', // TODO: Add your Logto App ID
-    endpoint: '', // TODO: Add your Logto endpoint URL
+  runtimeConfig: {
+    public: {
+      apiBase: 'http://localhost:8000',
+    },
   },
 
   // SEO defaults
