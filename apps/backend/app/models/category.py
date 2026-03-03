@@ -38,3 +38,6 @@ class Category(Base):
         "Category", back_populates="parent", lazy="selectin",
         order_by="Category.sort_order, Category.name",
     )
+    products: Mapped[list["app.models.product.Product"]] = relationship(
+        "Product", back_populates="category", lazy="noload",
+    )

@@ -15,6 +15,7 @@ UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 (UPLOAD_DIR / "avatars").mkdir(exist_ok=True)
 (UPLOAD_DIR / "categories").mkdir(exist_ok=True)
+(UPLOAD_DIR / "products").mkdir(exist_ok=True)
 
 
 @asynccontextmanager
