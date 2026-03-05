@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="auth-bg"></div>
+    <div class="auth-bg" />
 
     <!-- Theme Toggle (floating) -->
     <button class="theme-toggle theme-toggle-float" @click="toggleTheme" :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">

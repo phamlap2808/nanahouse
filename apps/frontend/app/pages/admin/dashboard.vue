@@ -1,11 +1,11 @@
 <template>
   <div>
     <div class="page-header">
-      <h1 class="page-title">Dashboard</h1>
+      <h1 class="page-title">{{ $t('dashboard.title') }}</h1>
       <ClientOnly>
-        <p class="page-subtitle">Welcome back, {{ user?.full_name || 'User' }}</p>
+        <p class="page-subtitle">{{ $t('dashboard.welcome_back', { name: user?.full_name || '' }) }}</p>
         <template #fallback>
-          <p class="page-subtitle">Welcome back</p>
+          <p class="page-subtitle">{{ $t('dashboard.welcome') }}</p>
         </template>
       </ClientOnly>
     </div>
@@ -18,10 +18,10 @@
         </svg>
       </div>
       <h1 class="dashboard-welcome-title">
-        All systems operational
+        {{ $t('dashboard.all_systems') }}
       </h1>
       <p class="dashboard-welcome-text">
-        Your NanaHouse dashboard is ready. Use the sidebar to navigate between sections.
+        {{ $t('dashboard.ready_text') }}
       </p>
     </div>
   </div>

@@ -2,15 +2,15 @@
   <div>
     <div class="page-header" style="display: flex; align-items: flex-start; justify-content: space-between;">
       <div>
-        <h1 class="page-title">Categories</h1>
-        <p class="page-subtitle">Manage product categories in tree structure</p>
+        <h1 class="page-title">{{ $t('categories.title') }}</h1>
+        <p class="page-subtitle">{{ $t('categories.subtitle') }}</p>
       </div>
       <button v-if="isAdmin" class="btn btn-primary btn-sm" @click="openCreateModal(null)">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"/>
           <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Add Category
+        {{ $t('categories.add') }}
       </button>
     </div>
 
@@ -36,7 +36,7 @@
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-container glass-card">
           <div class="modal-header">
-            <h2 class="modal-title">{{ editingId ? 'Edit Category' : 'New Category' }}</h2>
+            <h2 class="modal-title">{{ editingId ? $t('categories.edit') : $t('categories.new') }}</h2>
             <button class="action-btn" @click="closeModal">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/>
@@ -47,17 +47,17 @@
 
           <form @submit.prevent="handleSubmit">
             <div class="form-group">
-              <label class="form-label">Name</label>
-              <input v-model="form.name" type="text" class="form-input" placeholder="Category name" required>
+              <label class="form-label">{{ $t('common.name') }}</label>
+              <input v-model="form.name" type="text" class="form-input" :placeholder="$t('common.name')" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Description</label>
-              <input v-model="form.description" type="text" class="form-input" placeholder="Optional description">
+              <label class="form-label">{{ $t('common.description') }}</label>
+              <input v-model="form.description" type="text" class="form-input" :placeholder="$t('common.optional')">
             </div>
             <div class="form-group">
-              <label class="form-label">Parent Category</label>
+              <label class="form-label">{{ $t('categories.parent') }}</label>
               <select v-model="form.parent_id" class="form-input">
-                <option :value="null">— Root (no parent) —</option>
+                <option :value="null">{{ $t('categories.root') }}</option>
                 <option
                   v-for="opt in parentOptions"
                   :key="opt.id"
@@ -69,7 +69,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Sort Order</label>
+              <label class="form-label">{{ $t('categories.sort_order') }}</label>
               <input v-model.number="form.sort_order" type="number" class="form-input" min="0">
             </div>
 
@@ -78,10 +78,10 @@
             </div>
 
             <div class="form-actions" style="margin-top: 20px; justify-content: flex-end;">
-              <button type="button" class="btn btn-ghost btn-sm" @click="closeModal">Cancel</button>
+              <button type="button" class="btn btn-ghost btn-sm" @click="closeModal">{{ $t('common.cancel') }}</button>
               <button type="submit" class="btn btn-primary btn-sm" :disabled="saving">
                 <span v-if="saving" class="spinner"/>
-                {{ editingId ? 'Save Changes' : 'Create' }}
+                {{ editingId ? $t('common.save_changes') : $t('common.create') }}
               </button>
             </div>
           </form>
@@ -99,7 +99,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
         </svg>
-        <p>No categories yet</p>
+        <p>{{ $t('categories.no_categories') }}</p>
       </div>
 
       <div v-else class="tree-container">
@@ -149,6 +149,7 @@ interface CategoryItem {
 const { token, isAdmin } = useAuth()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase as string
+const { t } = useI18n()
 
 const tree = ref<CategoryItem[]>([])
 
@@ -211,7 +212,8 @@ const fetchCategories = async () => {
     collectIds(data)
     expandedIds.value = allIds
   } catch (err: unknown) {
-    errorMsg.value = err?.data?.detail || 'Failed to load categories'
+    const e = err as { data?: { detail?: string } }
+    errorMsg.value = e?.data?.detail || t('categories.failed_load')
   } finally {
     loading.value = false
   }
@@ -263,7 +265,7 @@ const handleSubmit = async () => {
           sort_order: form.sort_order,
         },
       })
-      successMsg.value = 'Category updated successfully'
+      successMsg.value = t('categories.updated_success')
     } else {
       await $fetch(`${apiBase}/api/v1/categories/`, {
         method: 'POST',
@@ -275,20 +277,21 @@ const handleSubmit = async () => {
           sort_order: form.sort_order,
         },
       })
-      successMsg.value = 'Category created successfully'
+      successMsg.value = t('categories.created_success')
     }
     closeModal()
     await fetchCategories()
     setTimeout(() => { successMsg.value = '' }, 3000)
   } catch (err: unknown) {
-    modalError.value = err?.data?.detail || 'Operation failed'
+    const e = err as { data?: { detail?: string } }
+    modalError.value = e?.data?.detail || t('categories.operation_failed')
   } finally {
     saving.value = false
   }
 }
 
 const handleDelete = async (cat: CategoryItem) => {
-  if (!confirm(`Delete "${cat.name}"? This cannot be undone.`)) return
+  if (!confirm(t('categories.delete_confirm', { name: cat.name }))) return
   successMsg.value = ''
   errorMsg.value = ''
   try {
@@ -296,11 +299,12 @@ const handleDelete = async (cat: CategoryItem) => {
       method: 'DELETE',
       headers: authHeaders(),
     })
-    successMsg.value = 'Category deleted successfully'
+    successMsg.value = t('categories.deleted_success')
     await fetchCategories()
     setTimeout(() => { successMsg.value = '' }, 3000)
   } catch (err: unknown) {
-    errorMsg.value = err?.data?.detail || 'Failed to delete category'
+    const e = err as { data?: { detail?: string } }
+    errorMsg.value = e?.data?.detail || t('categories.failed_delete')
   }
 }
 </script>

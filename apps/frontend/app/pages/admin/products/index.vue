@@ -2,14 +2,14 @@
   <div>
     <div class="page-header" style="display: flex; align-items: flex-start; justify-content: space-between;">
       <div>
-        <h1 class="page-title">Products</h1>
-        <p class="page-subtitle">Manage products and variants</p>
+        <h1 class="page-title">{{ $t('products.title') }}</h1>
+        <p class="page-subtitle">{{ $t('products.subtitle') }}</p>
       </div>
       <button v-if="isAdmin" class="btn btn-primary btn-sm" @click="openCreateModal">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Add Product
+        {{ $t('products.add') }}
       </button>
     </div>
 
@@ -26,15 +26,15 @@
     <!-- Filter bar -->
     <div class="glass-card" style="padding: 12px 16px; margin-bottom: 16px;">
       <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
-        <input v-model="filters.search" type="text" class="form-input" placeholder="Search products..." style="flex: 1; min-width: 180px;" @input="debouncedFetch">
+        <input v-model="filters.search" type="text" class="form-input" :placeholder="$t('products.search_placeholder')" style="flex: 1; min-width: 180px;" @input="debouncedFetch">
         <select v-model="filters.category_id" class="form-input" style="width: 180px;" @change="fetchProducts">
-          <option :value="null">All Categories</option>
+          <option :value="null">{{ $t('products.all_categories') }}</option>
           <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
         </select>
         <select v-model="filters.is_active" class="form-input" style="width: 130px;" @change="fetchProducts">
-          <option :value="null">All Status</option>
-          <option :value="true">Active</option>
-          <option :value="false">Inactive</option>
+          <option :value="null">{{ $t('products.all_status') }}</option>
+          <option :value="true">{{ $t('common.active') }}</option>
+          <option :value="false">{{ $t('common.inactive') }}</option>
         </select>
       </div>
     </div>
@@ -44,7 +44,7 @@
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-container glass-card" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
           <div class="modal-header">
-            <h2 class="modal-title">{{ editingId ? 'Edit Product' : 'New Product' }}</h2>
+            <h2 class="modal-title">{{ editingId ? $t('products.edit') : $t('products.new') }}</h2>
             <button class="action-btn" @click="closeModal">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -53,44 +53,44 @@
           <form @submit.prevent="handleSubmit">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
               <div class="form-group" style="grid-column: 1 / -1;">
-                <label class="form-label">Name *</label>
+                <label class="form-label">{{ $t('common.name') }} *</label>
                 <input v-model="form.name" type="text" class="form-input" required>
               </div>
               <div class="form-group">
-                <label class="form-label">SKU</label>
+                <label class="form-label">{{ $t('products.sku') }}</label>
                 <input v-model="form.sku" type="text" class="form-input" placeholder="e.g. CF-SUA-DA">
               </div>
               <div class="form-group">
-                <label class="form-label">Category</label>
+                <label class="form-label">{{ $t('products.category') }}</label>
                 <select v-model="form.category_id" class="form-input">
-                  <option :value="null">— No category —</option>
+                  <option :value="null">{{ $t('products.no_category') }}</option>
                   <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">Price *</label>
+                <label class="form-label">{{ $t('products.price') }} *</label>
                 <input v-model.number="form.price" type="number" class="form-input" min="0" step="1000" required>
               </div>
               <div class="form-group">
-                <label class="form-label">Compare Price</label>
+                <label class="form-label">{{ $t('products.compare_price') }}</label>
                 <input v-model.number="form.compare_price" type="number" class="form-input" min="0" step="1000">
               </div>
               <div class="form-group">
-                <label class="form-label">Stock</label>
+                <label class="form-label">{{ $t('products.stock') }}</label>
                 <input v-model.number="form.stock_quantity" type="number" class="form-input" min="0">
               </div>
               <div class="form-group">
-                <label class="form-label">Sort Order</label>
+                <label class="form-label">{{ $t('products.sort_order') }}</label>
                 <input v-model.number="form.sort_order" type="number" class="form-input" min="0">
               </div>
               <div class="form-group" style="grid-column: 1 / -1;">
-                <label class="form-label">Description</label>
-                <textarea v-model="form.description" class="form-input" rows="2" placeholder="Optional description" />
+                <label class="form-label">{{ $t('common.description') }}</label>
+                <textarea v-model="form.description" class="form-input" rows="2" :placeholder="$t('products.optional_desc')" />
               </div>
 
               <!-- Image Upload -->
               <div class="form-group" style="grid-column: 1 / -1;">
-                <label class="form-label">Product Image</label>
+                <label class="form-label">{{ $t('products.image') }}</label>
                 <div class="image-upload-area">
                   <div v-if="imagePreviewUrl" class="image-preview">
                     <img :src="imagePreviewUrl" alt="Preview">
@@ -100,7 +100,7 @@
                   </div>
                   <label v-else class="image-upload-trigger">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <span>Click to upload image</span>
+                    <span>{{ $t('products.upload_image') }}</span>
                     <input ref="fileInputRef" type="file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;" @change="onFileSelected">
                   </label>
                 </div>
@@ -110,17 +110,17 @@
             <!-- Variants Section -->
             <div style="margin-top: 16px; border-top: 1px solid var(--glass-border); padding-top: 16px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <label class="form-label" style="margin-bottom: 0; font-size: 0.95rem;">Variants</label>
-                <button type="button" class="btn btn-ghost btn-sm" style="font-size: 0.8rem;" @click="addVariant">+ Add Variant</button>
+                <label class="form-label" style="margin-bottom: 0; font-size: 0.95rem;">{{ $t('products.variants') }}</label>
+                <button type="button" class="btn btn-ghost btn-sm" style="font-size: 0.8rem;" @click="addVariant">{{ $t('products.add_variant') }}</button>
               </div>
               <div v-if="form.variants.length === 0" style="color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 12px;">
-                No variants — product uses base price
+                {{ $t('products.no_variants') }}
               </div>
               <div v-for="(v, i) in form.variants" :key="i" style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px; padding: 8px; border-radius: 8px; background: var(--glass-bg);">
-                <input v-model="v.name" type="text" class="form-input" placeholder="Name" style="flex: 2; font-size: 0.85rem;" required>
-                <input v-model="v.sku" type="text" class="form-input" placeholder="SKU" style="flex: 1; font-size: 0.85rem;">
-                <input v-model.number="v.price" type="number" class="form-input" placeholder="Price" min="0" step="1000" style="flex: 1; font-size: 0.85rem;" required>
-                <input v-model.number="v.stock_quantity" type="number" class="form-input" placeholder="Stock" min="0" style="width: 70px; font-size: 0.85rem;">
+                <input v-model="v.name" type="text" class="form-input" :placeholder="$t('common.name')" style="flex: 2; font-size: 0.85rem;" required>
+                <input v-model="v.sku" type="text" class="form-input" :placeholder="$t('products.sku')" style="flex: 1; font-size: 0.85rem;">
+                <input v-model.number="v.price" type="number" class="form-input" :placeholder="$t('products.price')" min="0" step="1000" style="flex: 1; font-size: 0.85rem;" required>
+                <input v-model.number="v.stock_quantity" type="number" class="form-input" :placeholder="$t('products.stock')" min="0" style="width: 70px; font-size: 0.85rem;">
                 <button type="button" class="action-btn danger" style="flex-shrink:0;" @click="form.variants.splice(i, 1)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -130,10 +130,10 @@
             <div v-if="modalError" class="alert alert-error" style="margin-top: 12px;">{{ modalError }}</div>
 
             <div class="form-actions" style="margin-top: 20px; justify-content: flex-end;">
-              <button type="button" class="btn btn-ghost btn-sm" @click="closeModal">Cancel</button>
+              <button type="button" class="btn btn-ghost btn-sm" @click="closeModal">{{ $t('common.cancel') }}</button>
               <button type="submit" class="btn btn-primary btn-sm" :disabled="saving">
                 <span v-if="saving" class="spinner"/>
-                {{ editingId ? 'Save Changes' : 'Create' }}
+                {{ editingId ? $t('common.save_changes') : $t('common.create') }}
               </button>
             </div>
           </form>
@@ -149,21 +149,21 @@
 
       <div v-else-if="products.length === 0" class="empty-state">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-        <p>No products yet</p>
+        <p>{{ $t('products.no_products') }}</p>
       </div>
 
       <table v-else class="data-table">
         <thead>
           <tr>
             <th style="width: 50px;"></th>
-            <th>Name</th>
-            <th class="hide-mobile">SKU</th>
-            <th>Price</th>
-            <th class="hide-mobile">Category</th>
-            <th class="hide-mobile">Stock</th>
-            <th class="hide-mobile">Variants</th>
-            <th>Status</th>
-            <th v-if="isAdmin" style="width: 100px;">Actions</th>
+            <th>{{ $t('common.name') }}</th>
+            <th class="hide-mobile">{{ $t('products.sku') }}</th>
+            <th>{{ $t('products.price') }}</th>
+            <th class="hide-mobile">{{ $t('products.category') }}</th>
+            <th class="hide-mobile">{{ $t('products.stock') }}</th>
+            <th class="hide-mobile">{{ $t('products.variants') }}</th>
+            <th>{{ $t('common.status') }}</th>
+            <th v-if="isAdmin" style="width: 100px;">{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -188,15 +188,15 @@
             </td>
             <td>
               <span :class="['status-dot', p.is_active ? 'active' : 'inactive']">
-                {{ p.is_active ? 'Active' : 'Inactive' }}
+                {{ p.is_active ? $t('common.active') : $t('common.inactive') }}
               </span>
             </td>
             <td v-if="isAdmin">
               <div style="display: flex; gap: 4px;">
-                <button class="action-btn" title="Edit" @click="openEditModal(p)">
+                <button class="action-btn" :title="$t('common.edit')" @click="openEditModal(p)">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <button class="action-btn danger" title="Delete" @click="handleDelete(p)">
+                <button class="action-btn danger" :title="$t('common.delete')" @click="handleDelete(p)">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
               </div>
@@ -208,9 +208,9 @@
 
     <!-- Pagination -->
     <div v-if="totalPages > 1" class="pagination-bar">
-      <button class="btn btn-ghost btn-sm" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">← Prev</button>
-      <span class="pagination-info">Page {{ currentPage }} / {{ totalPages }} ({{ totalItems }} items)</span>
-      <button class="btn btn-ghost btn-sm" :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">Next →</button>
+      <button class="btn btn-ghost btn-sm" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">{{ $t('common.prev') }}</button>
+      <span class="pagination-info">{{ $t('common.page_info', { current: currentPage, total: totalPages, items: totalItems }) }}</span>
+      <button class="btn btn-ghost btn-sm" :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">{{ $t('common.next') }}</button>
     </div>
   </div>
 </template>
@@ -262,6 +262,7 @@ interface ProductListData {
 const { token, isAdmin } = useAuth()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase as string
+const { t } = useI18n()
 
 const products = ref<ProductItem[]>([])
 const categories = ref<CategoryItem[]>([])
@@ -361,7 +362,7 @@ const fetchProducts = async () => {
     totalItems.value = data.total
   } catch (err: unknown) {
     const e = err as { data?: { detail?: string } }
-    errorMsg.value = e?.data?.detail || 'Failed to load products'
+    errorMsg.value = e?.data?.detail || t('products.failed_load')
   } finally {
     loading.value = false
   }
@@ -457,7 +458,7 @@ const handleSubmit = async () => {
           body: { name: v.name, sku: v.sku || null, price: v.price, compare_price: v.compare_price, stock_quantity: v.stock_quantity, sort_order: v.sort_order },
         })
       }
-      successMsg.value = 'Product updated successfully'
+      successMsg.value = t('products.updated_success')
     } else {
       // Create with variants
       body.variants = form.variants.map(v => ({
@@ -475,31 +476,31 @@ const handleSubmit = async () => {
           method: 'PUT', headers: { Authorization: `Bearer ${token.value}` }, body: fd,
         })
       }
-      successMsg.value = 'Product created successfully'
+      successMsg.value = t('products.created_success')
     }
     closeModal()
     await fetchProducts()
     setTimeout(() => { successMsg.value = '' }, 3000)
   } catch (err: unknown) {
     const e = err as { data?: { detail?: string } }
-    modalError.value = e?.data?.detail || 'Operation failed'
+    modalError.value = e?.data?.detail || t('products.operation_failed')
   } finally {
     saving.value = false
   }
 }
 
 const handleDelete = async (p: ProductItem) => {
-  if (!confirm(`Delete "${p.name}"? This will also delete all variants.`)) return
+  if (!confirm(t('products.delete_confirm', { name: p.name }))) return
   try {
     await $fetch(`${apiBase}/api/v1/products/${p.id}`, {
       method: 'DELETE', headers: authHeaders(),
     })
-    successMsg.value = 'Product deleted successfully'
+    successMsg.value = t('products.deleted_success')
     await fetchProducts()
     setTimeout(() => { successMsg.value = '' }, 3000)
   } catch (err: unknown) {
     const e = err as { data?: { detail?: string } }
-    errorMsg.value = e?.data?.detail || 'Failed to delete product'
+    errorMsg.value = e?.data?.detail || t('products.failed_delete')
   }
 }
 </script>

@@ -1,157 +1,123 @@
 <template>
-  <NuxtLayout name="auth">
+  <div>
     <div class="auth-card glass-card">
-      <div class="auth-header">
-        <div class="auth-logo">
-          <div class="auth-logo-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-          </div>
-          NanaHouse
-        </div>
-        <h1 class="auth-title">Create your account</h1>
-        <p class="auth-subtitle">Get started with NanaHouse today</p>
+      <div class="auth-logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
       </div>
+      <h1 class="auth-title">NanaHouse</h1>
+      <h2 class="auth-subtitle">{{ $t('auth.register_title') }}</h2>
+      <p class="auth-description">{{ $t('auth.register_subtitle') }}</p>
 
-      <!-- Error alert -->
+      <!-- Error Message -->
       <div v-if="error" class="alert alert-error">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
-          <line x1="15" y1="9" x2="9" y2="15"/>
-          <line x1="9" y1="9" x2="15" y2="15"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
         {{ error }}
       </div>
 
       <form @submit.prevent="handleRegister">
         <div class="form-group">
-          <label for="full_name" class="form-label">Full Name</label>
+          <label class="form-label">{{ $t('auth.full_name') }}</label>
           <input
-            id="full_name"
             v-model="form.full_name"
             type="text"
             class="form-input"
-            placeholder="John Doe"
+            :placeholder="$t('auth.enter_name')"
             required
-            autocomplete="name"
-          />
+          >
         </div>
 
         <div class="form-group">
-          <label for="email" class="form-label">Email</label>
+          <label class="form-label">{{ $t('auth.email') }}</label>
           <input
-            id="email"
             v-model="form.email"
             type="email"
             class="form-input"
-            placeholder="you@example.com"
+            :placeholder="$t('auth.enter_email')"
             required
-            autocomplete="email"
-          />
+          >
         </div>
 
         <div class="form-group">
-          <label for="password" class="form-label">Password</label>
+          <label class="form-label">{{ $t('auth.password') }}</label>
           <input
-            id="password"
             v-model="form.password"
             type="password"
             class="form-input"
-            :class="{ error: passwordError }"
-            placeholder="Min 6 characters"
+            :placeholder="$t('auth.min_password')"
             required
-            autocomplete="new-password"
             minlength="6"
-          />
-          <p v-if="passwordError" class="form-error">{{ passwordError }}</p>
+          >
         </div>
 
         <div class="form-group">
-          <label for="confirm_password" class="form-label">Confirm Password</label>
+          <label class="form-label">{{ $t('auth.confirm_password') }}</label>
           <input
-            id="confirm_password"
-            v-model="form.confirm_password"
+            v-model="form.confirmPassword"
             type="password"
             class="form-input"
-            :class="{ error: confirmError }"
-            placeholder="Re-enter your password"
+            :placeholder="$t('auth.confirm_your_password')"
             required
-            autocomplete="new-password"
-          />
-          <p v-if="confirmError" class="form-error">{{ confirmError }}</p>
+          >
         </div>
 
-        <button type="submit" class="btn btn-primary" :disabled="loading">
+        <button type="submit" class="btn btn-primary btn-full" :disabled="loading">
           <span v-if="loading" class="spinner"></span>
-          {{ loading ? 'Creating account...' : 'Create account' }}
+          {{ $t('auth.register') }}
         </button>
       </form>
 
-      <div class="auth-footer">
-        Already have an account? <NuxtLink to="/login">Sign in</NuxtLink>
-      </div>
+      <p class="auth-footer">
+        {{ $t('auth.has_account') }}
+        <NuxtLink to="/login">{{ $t('auth.login') }}</NuxtLink>
+      </p>
     </div>
-  </NuxtLayout>
+  </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({
-  layout: false,
+  layout: 'auth',
 })
 
 useHead({
-  title: 'Create Account - NanaHouse',
-  meta: [{ name: 'description', content: 'Create your NanaHouse account' }],
+  title: 'Register - NanaHouse',
 })
 
 const { register, loading, error, isAuthenticated, initAuth } = useAuth()
+const { t } = useI18n()
+
+onMounted(() => {
+  initAuth()
+  if (isAuthenticated.value) {
+    navigateTo('/admin/dashboard')
+  }
+})
 
 const form = reactive({
   full_name: '',
   email: '',
   password: '',
-  confirm_password: '',
+  confirmPassword: '',
 })
-
-const passwordError = ref('')
-const confirmError = ref('')
-
-// Redirect if already authenticated
-onMounted(() => {
-  initAuth()
-  if (isAuthenticated.value) {
-    navigateTo('/dashboard')
-  }
-})
-
-const validate = (): boolean => {
-  passwordError.value = ''
-  confirmError.value = ''
-
-  if (form.password.length < 6) {
-    passwordError.value = 'Password must be at least 6 characters'
-    return false
-  }
-
-  if (form.password !== form.confirm_password) {
-    confirmError.value = 'Passwords do not match'
-    return false
-  }
-
-  return true
-}
 
 const handleRegister = async () => {
-  if (!validate()) return
+  if (form.password !== form.confirmPassword) {
+    error.value = t('auth.password_mismatch')
+    return
+  }
 
   const success = await register({
-    full_name: form.full_name,
     email: form.email,
     password: form.password,
+    full_name: form.full_name,
   })
-
   if (success) {
     navigateTo('/login?registered=true')
   }

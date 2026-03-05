@@ -8,7 +8,7 @@ const { isAuthenticated, initAuth } = useAuth()
 onMounted(() => {
   initAuth()
   if (isAuthenticated.value) {
-    navigateTo('/dashboard')
+    navigateTo('/admin/dashboard')
   } else {
     navigateTo('/login')
   }

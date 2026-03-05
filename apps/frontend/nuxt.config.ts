@@ -11,7 +11,23 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxtjs/robots',
     '@nuxtjs/sitemap',
+    '@nuxtjs/i18n',
   ],
+
+  i18n: {
+    locales: [
+      { code: 'vi', name: 'Tiếng Việt', file: 'vi.json' },
+      { code: 'en', name: 'English', file: 'en.json' },
+    ],
+    defaultLocale: 'vi',
+    langDir: 'locales',
+    strategy: 'no_prefix',
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'nanahouse_i18n',
+      fallbackLocale: 'vi',
+    },
+  },
 
   css: ['~/assets/css/glassmorphism.css'],
 

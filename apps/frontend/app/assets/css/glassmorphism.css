@@ -177,8 +177,7 @@ body {
 }
 
 .auth-card {
-  width: 100%;
-  max-width: 440px;
+  width: 440px;
   padding: 40px;
 }
 

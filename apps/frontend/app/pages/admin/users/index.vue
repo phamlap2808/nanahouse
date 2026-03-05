@@ -2,15 +2,15 @@
   <div>
     <div class="page-header" style="display: flex; align-items: flex-start; justify-content: space-between;">
       <div>
-        <h1 class="page-title">User Management</h1>
-        <p class="page-subtitle">Manage team members and their roles</p>
+        <h1 class="page-title">{{ $t('users.title') }}</h1>
+        <p class="page-subtitle">{{ $t('users.subtitle') }}</p>
       </div>
       <button class="btn btn-primary btn-sm" @click="openCreateModal">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"/>
           <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Add User
+        {{ $t('users.add') }}
       </button>
     </div>
 
@@ -36,7 +36,7 @@
       <div v-if="showCreateModal" class="modal-overlay" @click.self="closeCreateModal">
         <div class="modal-container glass-card">
           <div class="modal-header">
-            <h2 class="modal-title">Create New User</h2>
+            <h2 class="modal-title">{{ $t('users.create_new') }}</h2>
             <button class="action-btn" @click="closeCreateModal">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/>
@@ -47,42 +47,42 @@
 
           <form @submit.prevent="handleCreateUser">
             <div class="form-group">
-              <label class="form-label">Full Name</label>
+              <label class="form-label">{{ $t('auth.full_name') }}</label>
               <input
                 v-model="createForm.full_name"
                 type="text"
                 class="form-input"
-                placeholder="Enter full name"
+                :placeholder="$t('users.enter_name')"
                 required
               />
             </div>
             <div class="form-group">
-              <label class="form-label">Email</label>
+              <label class="form-label">{{ $t('auth.email') }}</label>
               <input
                 v-model="createForm.email"
                 type="email"
                 class="form-input"
-                placeholder="Enter email address"
+                :placeholder="$t('users.enter_email')"
                 required
               />
             </div>
             <div class="form-group">
-              <label class="form-label">Password</label>
+              <label class="form-label">{{ $t('auth.password') }}</label>
               <input
                 v-model="createForm.password"
                 type="password"
                 class="form-input"
-                placeholder="Min 6 characters"
+                :placeholder="$t('auth.min_password')"
                 required
                 minlength="6"
               />
             </div>
             <div class="form-group">
-              <label class="form-label">Role</label>
+              <label class="form-label">{{ $t('users.role') }}</label>
               <select v-model="createForm.role" class="form-input">
-                <option value="staff">Staff</option>
-                <option value="admin">Admin</option>
-                <option value="viewer">Viewer</option>
+                <option value="staff">{{ $t('users.role_staff') }}</option>
+                <option value="admin">{{ $t('users.role_admin') }}</option>
+                <option value="viewer">{{ $t('users.role_viewer') }}</option>
               </select>
             </div>
 
@@ -91,10 +91,10 @@
             </div>
 
             <div class="form-actions" style="margin-top: 20px; justify-content: flex-end;">
-              <button type="button" class="btn btn-ghost btn-sm" @click="closeCreateModal">Cancel</button>
+              <button type="button" class="btn btn-ghost btn-sm" @click="closeCreateModal">{{ $t('common.cancel') }}</button>
               <button type="submit" class="btn btn-primary btn-sm" :disabled="creating">
                 <span v-if="creating" class="spinner" />
-                Create User
+                {{ $t('common.create') }}
               </button>
             </div>
           </form>
@@ -107,12 +107,12 @@
       <table v-if="users.length > 0" class="data-table">
         <thead>
           <tr>
-            <th>User</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Joined</th>
-            <th>Actions</th>
+            <th>{{ $t('users.user') }}</th>
+            <th>{{ $t('auth.email') }}</th>
+            <th>{{ $t('users.role') }}</th>
+            <th>{{ $t('common.status') }}</th>
+            <th>{{ $t('users.joined') }}</th>
+            <th>{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -132,14 +132,14 @@
                 :disabled="u.id === currentUser?.id"
                 @change="handleRoleChange(u.id, ($event.target as HTMLSelectElement).value)"
               >
-                <option value="admin">Admin</option>
-                <option value="staff">Staff</option>
-                <option value="viewer">Viewer</option>
+                <option value="admin">{{ $t('users.role_admin') }}</option>
+                <option value="staff">{{ $t('users.role_staff') }}</option>
+                <option value="viewer">{{ $t('users.role_viewer') }}</option>
               </select>
             </td>
             <td>
               <span class="badge" :class="u.is_active ? 'badge-active' : 'badge-inactive'">
-                {{ u.is_active ? 'Active' : 'Inactive' }}
+                {{ u.is_active ? $t('common.active') : $t('common.inactive') }}
               </span>
             </td>
             <td>{{ formatDate(u.created_at) }}</td>
@@ -148,7 +148,7 @@
                 <button
                   v-if="u.id !== currentUser?.id"
                   class="action-btn"
-                  :title="u.is_active ? 'Deactivate' : 'Activate'"
+                  :title="u.is_active ? $t('users.deactivate') : $t('users.activate')"
                   @click="handleToggleStatus(u)"
                 >
                   <svg v-if="u.is_active" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -162,7 +162,7 @@
                 <button
                   v-if="u.id !== currentUser?.id"
                   class="action-btn danger"
-                  title="Delete user"
+                  :title="$t('users.delete_user')"
                   @click="handleDelete(u)"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -181,7 +181,7 @@
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
         </svg>
-        <p>No users found</p>
+        <p>{{ $t('users.no_users') }}</p>
       </div>
 
       <div v-else class="empty-state">
@@ -213,6 +213,7 @@ interface UserItem {
 const { user: currentUser, token, isAdmin } = useAuth()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase as string
+const { t } = useI18n()
 
 const users = ref<UserItem[]>([])
 const loadingUsers = ref(true)
@@ -236,7 +237,7 @@ const authHeaders = () => ({
 
 onMounted(async () => {
   if (!isAdmin.value) {
-    navigateTo('/dashboard')
+    navigateTo('/admin/dashboard')
     return
   }
   await fetchUsers()
@@ -270,11 +271,12 @@ const handleCreateUser = async () => {
       },
     })
     closeCreateModal()
-    successMsg.value = `User "${createForm.full_name}" created successfully`
+    successMsg.value = t('users.created_success', { name: createForm.full_name })
     await fetchUsers()
     setTimeout(() => { successMsg.value = '' }, 3000)
-  } catch (err: any) {
-    createError.value = err?.data?.detail || 'Failed to create user'
+  } catch (err: unknown) {
+    const e = err as { data?: { detail?: string } }
+    createError.value = e?.data?.detail || t('users.failed_create')
   } finally {
     creating.value = false
   }
@@ -288,8 +290,9 @@ const fetchUsers = async () => {
       headers: authHeaders(),
     })
     users.value = data
-  } catch (err: any) {
-    errorMsg.value = err?.data?.detail || 'Failed to load users'
+  } catch (err: unknown) {
+    const e = err as { data?: { detail?: string } }
+    errorMsg.value = e?.data?.detail || t('users.failed_load')
   } finally {
     loadingUsers.value = false
   }
@@ -304,11 +307,12 @@ const handleRoleChange = async (userId: number, newRole: string) => {
       headers: authHeaders(),
       body: { role: newRole },
     })
-    successMsg.value = 'Role updated successfully'
+    successMsg.value = t('users.role_updated')
     await fetchUsers()
     setTimeout(() => { successMsg.value = '' }, 2000)
-  } catch (err: any) {
-    errorMsg.value = err?.data?.detail || 'Failed to update role'
+  } catch (err: unknown) {
+    const e = err as { data?: { detail?: string } }
+    errorMsg.value = e?.data?.detail || t('users.failed_role')
   }
 }
 
@@ -321,16 +325,17 @@ const handleToggleStatus = async (u: UserItem) => {
       headers: authHeaders(),
       body: { is_active: !u.is_active },
     })
-    successMsg.value = `User ${u.is_active ? 'deactivated' : 'activated'} successfully`
+    successMsg.value = u.is_active ? t('users.status_deactivated') : t('users.status_activated')
     await fetchUsers()
     setTimeout(() => { successMsg.value = '' }, 2000)
-  } catch (err: any) {
-    errorMsg.value = err?.data?.detail || 'Failed to update status'
+  } catch (err: unknown) {
+    const e = err as { data?: { detail?: string } }
+    errorMsg.value = e?.data?.detail || t('users.failed_status')
   }
 }
 
 const handleDelete = async (u: UserItem) => {
-  if (!confirm(`Are you sure you want to delete "${u.full_name}"? This action cannot be undone.`)) {
+  if (!confirm(t('users.delete_confirm', { name: u.full_name }))) {
     return
   }
   successMsg.value = ''
@@ -340,11 +345,12 @@ const handleDelete = async (u: UserItem) => {
       method: 'DELETE',
       headers: authHeaders(),
     })
-    successMsg.value = 'User deleted successfully'
+    successMsg.value = t('users.deleted_success')
     await fetchUsers()
     setTimeout(() => { successMsg.value = '' }, 2000)
-  } catch (err: any) {
-    errorMsg.value = err?.data?.detail || 'Failed to delete user'
+  } catch (err: unknown) {
+    const e = err as { data?: { detail?: string } }
+    errorMsg.value = e?.data?.detail || t('users.failed_delete')
   }
 }
 

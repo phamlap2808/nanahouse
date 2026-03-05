@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="page-header">
-      <h1 class="page-title">Settings</h1>
-      <p class="page-subtitle">Manage your account preferences</p>
+      <h1 class="page-title">{{ $t('settings.title') }}</h1>
+      <p class="page-subtitle">{{ $t('settings.subtitle') }}</p>
     </div>
 
     <!-- Success / Error Messages -->
@@ -27,7 +27,7 @@
     <div class="settings-card glass-card">
       <!-- Avatar Section -->
       <section class="settings-section">
-        <h3 class="settings-section-title">Avatar</h3>
+        <h3 class="settings-section-title">{{ $t('settings.avatar') }}</h3>
         <div class="avatar-upload-area">
           <div class="avatar-preview" @click="triggerFileInput">
             <img v-if="avatarSrc" :src="avatarSrc" alt="User avatar" class="avatar-preview-img">
@@ -41,9 +41,9 @@
           </div>
           <div class="avatar-upload-info">
             <button type="button" class="btn btn-ghost btn-sm" @click="triggerFileInput">
-              Change photo
+              {{ $t('settings.change_photo') }}
             </button>
-            <p class="avatar-upload-hint">JPG, PNG, GIF or WebP. Max 2MB.</p>
+            <p class="avatar-upload-hint">{{ $t('settings.photo_hint') }}</p>
           </div>
           <input
             ref="fileInputRef"
@@ -59,20 +59,20 @@
 
       <!-- Profile Section -->
       <section class="settings-section">
-        <h3 class="settings-section-title">Profile</h3>
+        <h3 class="settings-section-title">{{ $t('settings.profile') }}</h3>
         <form @submit.prevent="handleUpdateProfile">
           <div class="form-group">
-            <label class="form-label">Full Name</label>
+            <label class="form-label">{{ $t('auth.full_name') }}</label>
             <input
               v-model="profileForm.fullName"
               type="text"
               class="form-input"
-              placeholder="Your full name"
+              :placeholder="$t('settings.your_name')"
               required
             >
           </div>
           <div class="form-group">
-            <label class="form-label">Email</label>
+            <label class="form-label">{{ $t('auth.email') }}</label>
             <input
               :value="user?.email"
               type="email"
@@ -84,7 +84,7 @@
           <div class="form-actions">
             <button type="submit" class="btn btn-primary btn-sm" :disabled="loading">
               <span v-if="loading" class="spinner"></span>
-              Save Changes
+              {{ $t('common.save_changes') }}
             </button>
           </div>
         </form>
@@ -94,43 +94,43 @@
 
       <!-- Password Section -->
       <section class="settings-section" style="margin-bottom: 0;">
-        <h3 class="settings-section-title">Change Password</h3>
+        <h3 class="settings-section-title">{{ $t('settings.change_password') }}</h3>
         <form @submit.prevent="handleChangePassword">
           <div class="form-group">
-            <label class="form-label">Current Password</label>
+            <label class="form-label">{{ $t('settings.current_password') }}</label>
             <input
               v-model="passwordForm.currentPassword"
               type="password"
               class="form-input"
-              placeholder="Enter current password"
+              :placeholder="$t('settings.enter_current')"
               required
             >
           </div>
           <div class="form-group">
-            <label class="form-label">New Password</label>
+            <label class="form-label">{{ $t('settings.new_password') }}</label>
             <input
               v-model="passwordForm.newPassword"
               type="password"
               class="form-input"
-              placeholder="Enter new password (min 6 chars)"
+              :placeholder="$t('settings.enter_new')"
               required
               minlength="6"
             >
           </div>
           <div class="form-group">
-            <label class="form-label">Confirm New Password</label>
+            <label class="form-label">{{ $t('settings.confirm_new_password') }}</label>
             <input
               v-model="passwordForm.confirmPassword"
               type="password"
               class="form-input"
-              placeholder="Confirm new password"
+              :placeholder="$t('settings.enter_confirm')"
               required
             >
           </div>
           <div class="form-actions">
             <button type="submit" class="btn btn-primary btn-sm" :disabled="loading">
               <span v-if="loading" class="spinner"></span>
-              Update Password
+              {{ $t('settings.update_password') }}
             </button>
           </div>
         </form>
@@ -151,6 +151,7 @@ useHead({
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase as string
 const { user, loading, error, updateProfile, changePassword, uploadAvatar } = useAuth()
+const { t } = useI18n()
 
 const successMsg = ref('')
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -192,13 +193,13 @@ const handleFileChange = async (event: Event) => {
   error.value = null
 
   if (file.size > 2 * 1024 * 1024) {
-    error.value = 'File size must be less than 2MB'
+    error.value = t('settings.file_too_large')
     return
   }
 
   const ok = await uploadAvatar(file)
   if (ok) {
-    successMsg.value = 'Avatar updated successfully!'
+    successMsg.value = t('settings.avatar_success')
     setTimeout(() => { successMsg.value = '' }, 3000)
   }
 
@@ -211,7 +212,7 @@ const handleUpdateProfile = async () => {
   error.value = null
   const ok = await updateProfile(profileForm.fullName)
   if (ok) {
-    successMsg.value = 'Profile updated successfully!'
+    successMsg.value = t('settings.profile_success')
     setTimeout(() => { successMsg.value = '' }, 3000)
   }
 }
@@ -221,18 +222,18 @@ const handleChangePassword = async () => {
   error.value = null
 
   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    error.value = 'New passwords do not match'
+    error.value = t('settings.password_mismatch')
     return
   }
 
   if (passwordForm.newPassword.length < 6) {
-    error.value = 'Password must be at least 6 characters'
+    error.value = t('settings.password_min')
     return
   }
 
   const ok = await changePassword(passwordForm.currentPassword, passwordForm.newPassword)
   if (ok) {
-    successMsg.value = 'Password changed successfully!'
+    successMsg.value = t('settings.password_success')
     passwordForm.currentPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmPassword = ''
