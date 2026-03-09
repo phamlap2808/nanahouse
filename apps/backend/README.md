@@ -20,6 +20,9 @@ uv sync --extra dev
 # 3. Chạy dev server
 uv run uvicorn app.main:app --reload --port 8000
 
+# 3.1 Chạy dev server ở powershell
+$env:Path = "C:\Users\lappg\.local\bin;$env:Path"; $env:PYENV = "$env:USERPROFILE\.pyenv\pyenv-win"; $env:PATH = "$env:USERPROFILE\.pyenv\pyenv-win\bin;$env:USERPROFILE\.pyenv\pyenv-win\shims;$env:PATH"; uv run uvicorn app.main:app --reload --port 8000
+
 # 4. Chạy tests
 uv run pytest
 

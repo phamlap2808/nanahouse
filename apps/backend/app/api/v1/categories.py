@@ -191,6 +191,7 @@ async def update_category(
 
     db.add(category)
     await db.flush()
+    await db.refresh(category)
     await db.refresh(category, attribute_names=["children"])
     return category
 
